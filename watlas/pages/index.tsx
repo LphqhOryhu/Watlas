@@ -9,7 +9,7 @@ export default function Home() {
 
     useEffect(() => {
         const fetchPages = async () => {
-            const { data, error } = await supabase.from<Page>('pages').select('*');
+            const { data, error } = await supabase.from<'pages', Page>('pages').select('*');
             if (error) {
                 console.error(error);
             } else if (data) {

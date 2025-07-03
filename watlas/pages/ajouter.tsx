@@ -23,7 +23,7 @@ export default function AjouterPage() {
     // Charger les pages depuis Supabase au chargement
     useEffect(() => {
         async function fetchPages() {
-            const { data, error } = await supabase.from<Page>('pages').select('*');
+            const { data, error } = await supabase.from<'pages', Page>('pages').select('*');
             if (error) {
                 console.error("Erreur chargement pages:", error.message);
             } else if (data) {
