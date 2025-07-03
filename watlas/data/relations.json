@@ -1,8 +1,0 @@
-[
-  {
-    "fromId": "illidan",
-    "toId": "chasseur-de-demons",
-    "type": "appartient_à",
-    "sources": ["warcraft-3"]
-  }
-]

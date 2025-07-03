@@ -13,5 +13,6 @@ export interface Page {
     name: string;
     type: PageType;
     description?: string;
-    category?: string; // ex : pour les groupes
+    category?: string;
+    relations?: string[];
 }
