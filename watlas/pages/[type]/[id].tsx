@@ -11,46 +11,49 @@ export default function PageDetail() {
 
     const [page, setPage] = useState<Page | null>(null);
     const [formData, setFormData] = useState<Page | null>(null);
-    const [pages, setPages] = useState<Page[]>([]); // <-- liste complète des pages
+    const [pages, setPages] = useState<Page[]>([]); // Liste complète pour les relations
     const [editMode, setEditMode] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Charger la fiche courante
+    // Charger la fiche courante avec gestion correcte des génériques Supabase
     useEffect(() => {
         if (!type || !id) return;
 
-        setLoading(true);
-        setError(null);
+        async function fetchPage() {
+            setLoading(true);
+            setError(null);
 
-        supabase
-            .from<Page>('pages')
-            .select('*')
-            .eq('id', id)
-            .eq('type', type)
-            .single()
-            .then(({ data, error }) => {
-                if (error) {
-                    setError('Erreur lors du chargement de la fiche.');
-                    setPage(null);
-                    setFormData(null);
-                } else {
-                    setPage(data);
-                    setFormData(data);
-                }
-            })
-            .finally(() => setLoading(false));
+            const { data, error } = await supabase
+                .from('pages')
+                .select('*')
+                .eq('id', id)
+                .eq('type', type)
+                .single();
+
+            if (error) {
+                setError('Erreur lors du chargement de la fiche.');
+                setPage(null);
+                setFormData(null);
+            } else {
+                setPage(data);
+                setFormData(data);
+            }
+
+            setLoading(false);
+        }
+
+        fetchPage();
     }, [type, id]);
 
-    // Charger toutes les pages pour retrouver les types des relations
+    // Charger toutes les pages pour résoudre les relations
     useEffect(() => {
-        supabase
-            .from<Page>('pages')
-            .select('*')
-            .then(({ data, error }) => {
-                if (!error && data) setPages(data);
-            });
+        async function fetchPages() {
+            const { data, error } = await supabase.from('pages').select('*');
+            if (!error && data) setPages(data);
+        }
+        fetchPages();
     }, []);
 
     if (loading) return <p className="p-8 text-center">Chargement...</p>;
@@ -58,9 +61,23 @@ export default function PageDetail() {
     if (!page) return <p className="p-8 text-center">Fiche introuvable...</p>;
     if (!formData) return null; // sécurité
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ) => {
         const { name, value } = e.target;
-        setFormData(f => f ? { ...f, [name]: value } : null);
+        setFormData((f) => (f ? { ...f, [name]: value } : null));
+    };
+
+    // Edition des relations (checkbox)
+    const handleRelationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const checked = e.target.checked;
+        const value = e.target.value;
+        setFormData((f) => ({
+            ...f!,
+            relations: checked
+                ? [...(f?.relations || []), value]
+                : (f?.relations || []).filter((id) => id !== value),
+        }));
     };
 
     const handleSave = async (e: React.FormEvent) => {
@@ -87,7 +104,11 @@ export default function PageDetail() {
         setSaving(true);
         setError(null);
 
-        const { error: supaError } = await supabase.from('pages').delete().eq('id', page.id).eq('type', page.type);
+        const { error: supaError } = await supabase
+            .from('pages')
+            .delete()
+            .eq('id', page.id)
+            .eq('type', page.type);
 
         if (supaError) {
             setError('Erreur lors de la suppression.');
@@ -117,15 +138,21 @@ export default function PageDetail() {
 
             {!editMode && (
                 <div className="space-y-4">
-                    <p><strong>Type :</strong> {page.type}</p>
-                    <p><strong>Description :</strong><br />{page.description}</p>
+                    <p>
+                        <strong>Type :</strong> {page.type}
+                    </p>
+                    <p>
+                        <strong>Description :</strong>
+                        <br />
+                        {page.description}
+                    </p>
 
                     {page.relations && page.relations.length > 0 && (
                         <div>
                             <h2 className="font-semibold mt-4 mb-2">Relations</h2>
                             <ul className="list-disc list-inside">
-                                {page.relations.map(relId => {
-                                    const relPage = pages.find(p => p.id === relId);
+                                {page.relations.map((relId) => {
+                                    const relPage = pages.find((p) => p.id === relId);
                                     return (
                                         <li
                                             key={relId}
@@ -134,8 +161,7 @@ export default function PageDetail() {
                                                 if (relPage) {
                                                     router.push(`/${relPage.type}/${relPage.id}`);
                                                 } else {
-                                                    // fallback si page liée inconnue
-                                                    router.push(`/${relId}`);
+                                                    router.push(`/${relId}`); // fallback
                                                 }
                                             }}
                                         >
@@ -185,13 +211,38 @@ export default function PageDetail() {
                             className="w-full p-2 border rounded"
                             disabled={saving}
                         >
-                            {['personnage', 'lieu', 'groupe', 'objet', 'événement', 'période', 'année', 'support_narratif'].map(t => (
-                                <option key={t} value={t}>{t}</option>
+                            {[
+                                'personnage',
+                                'lieu',
+                                'groupe',
+                                'objet',
+                                'événement',
+                                'période',
+                                'année',
+                                'support_narratif',
+                            ].map((t) => (
+                                <option key={t} value={t}>
+                                    {t}
+                                </option>
                             ))}
                         </select>
                     </label>
 
-                    {/* TODO : Ajouter l’édition des relations ici */}
+                    <label className="block font-semibold mt-4">Relations</label>
+                    <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto border p-2 rounded">
+                        {pages.map((p) => (
+                            <label key={p.id} className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="checkbox"
+                                    value={p.id}
+                                    checked={formData.relations?.includes(p.id) ?? false}
+                                    onChange={handleRelationChange}
+                                    disabled={saving}
+                                />
+                                {p.name} <span className="text-gray-500">({p.type})</span>
+                            </label>
+                        ))}
+                    </div>
 
                     <div className="flex gap-4">
                         <button
