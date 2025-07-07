@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Page } from '@/types/page';
+import Image from 'next/image';
 
 export default function PageDetail() {
     const router = useRouter();
@@ -153,7 +154,7 @@ export default function PageDetail() {
             {!editMode && (
                 <div className="space-y-4">
                     {formData.imageUrl && (
-                        <img
+                        <Image
                             src={formData.imageUrl}
                             alt={page.name}
                             className="max-w-full max-h-72 rounded mb-4"
