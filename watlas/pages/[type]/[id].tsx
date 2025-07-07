@@ -157,7 +157,9 @@ export default function PageDetail() {
                         <Image
                             src={formData.imageUrl}
                             alt={page.name}
-                            className="max-w-full max-h-72 rounded mb-4"
+                            width={600}
+                            height={400}
+                            className="rounded mb-4"
                         />
                     )}
                     <p>
