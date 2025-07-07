@@ -160,6 +160,7 @@ export default function PageDetail() {
                             width={600}
                             height={400}
                             className="rounded mb-4"
+                            unoptimized
                         />
                     )}
                     <p>
