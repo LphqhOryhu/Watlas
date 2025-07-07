@@ -64,7 +64,7 @@ export default function AjouterPage() {
             name: formData.name,
             type: formData.type,
             relations: formData.relations,
-            imageUrl: formData.imageUrl || null,
+            imageUrl: formData.imageUrl ? formData.imageUrl : undefined,
             sections: formData.sections,
         };
 
