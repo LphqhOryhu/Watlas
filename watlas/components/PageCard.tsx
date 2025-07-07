@@ -1,26 +1,30 @@
-import Link from 'next/link';
+import React from 'react';
 import { Page } from '@/types/page';
+import Link from 'next/link';
 
-interface Props {
+interface PageCardProps {
     page: Page;
 }
 
-export default function PageCard({ page }: Props) {
+export default function PageCard({ page }: PageCardProps) {
     return (
-        <Link href={`/${page.type}/${page.id}`}>
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-md transition duration-200 cursor-pointer">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    {page.name}
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                    {page.type}
-                </p>
-                {page.description && (
-                    <p className="mt-2 text-gray-800 dark:text-gray-200 text-sm">
-                        {page.description}
-                    </p>
-                )}
-            </div>
+        <Link
+            href={`/${page.type}/${page.id}`}
+            className="border rounded shadow p-4 flex flex-col cursor-pointer hover:shadow-lg"
+        >
+            {page.imageUrl ? (
+                <img
+                    src={page.imageUrl}
+                    alt={page.name}
+                    className="w-full h-48 object-cover rounded mb-4"
+                />
+            ) : (
+                <div className="w-full h-48 bg-gray-200 rounded mb-4 flex items-center justify-center text-gray-400">
+                    Pas d'image
+                </div>
+            )}
+            <h2 className="text-xl font-semibold">{page.name}</h2>
+            <p className="text-gray-600 truncate">{page.description || 'Pas de description'}</p>
         </Link>
     );
 }

@@ -21,7 +21,6 @@ export default function Home() {
     }, []);
 
     if (loading) return <p>Chargement...</p>;
-
     if (pages.length === 0) return <p>Aucune fiche trouvée.</p>;
 
     return (
