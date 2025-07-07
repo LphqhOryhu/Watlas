@@ -18,7 +18,7 @@ export default function PageCard({ page }: PageCardProps) {
 
             ) : (
                 <div className="w-full h-48 bg-gray-200 rounded mb-4 flex items-center justify-center text-gray-400">
-                    Pas d'image
+                    Pas d&#39;image
                 </div>
             )}
             <h2 className="text-xl font-semibold">{page.name}</h2>
