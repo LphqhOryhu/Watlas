@@ -127,7 +127,7 @@ export default function AjouterPage() {
                 <input
                     type="url"
                     name="imageUrl"
-                    placeholder="URL de l’image (ex: https://exemple.com/image.png)"
+                    placeholder="URL de l&apos;image (ex: https://exemple.com/image.png)"
                     className="w-full p-2 border rounded"
                     onChange={handleChange}
                     value={formData.imageUrl}

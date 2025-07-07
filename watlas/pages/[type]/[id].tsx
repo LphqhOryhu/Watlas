@@ -17,38 +17,6 @@ export default function PageDetail() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Upload image vers Supabase Storage et mise à jour de l'URL dans formData
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files || e.target.files.length === 0) return;
-
-        const file = e.target.files[0];
-        const ext = file.name.split('.').pop();
-        const safeId = (formData?.id || 'unknown').toLowerCase().replace(/\s+/g, '-');
-        const fileName = `${safeId}.${ext}`;
-
-        setSaving(true);
-        setError(null);
-
-        const { error: uploadError } = await supabase.storage
-            .from('images')
-            .upload(fileName, file, { upsert: true });
-
-        if (uploadError) {
-            setError('Erreur lors de l’upload de l’image : ' + uploadError.message);
-            setSaving(false);
-            return;
-        }
-
-        const { data: publicUrlData } = supabase.storage
-            .from('images')
-            .getPublicUrl(fileName);
-
-        if (publicUrlData.publicUrl) {
-            setFormData((f) => (f ? { ...f, imageUrl: publicUrlData.publicUrl } : null));
-        }
-
-        setSaving(false);
-    };
 
     // Charger la fiche courante
     useEffect(() => {
@@ -124,7 +92,7 @@ export default function PageDetail() {
         setError(null);
 
         // Préparer les données à envoyer sans modifier l'image si non changée
-        let dataToSave: Partial<Page> = { ...formData };
+        const dataToSave: Partial<Page> = { ...formData };
 
         // Si l'imageUrl n'a pas changé, on la retire pour ne pas l'écraser
         if (page?.imageUrl === formData.imageUrl) {
