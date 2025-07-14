@@ -20,4 +20,5 @@ export interface Page {
     sections?: Section[];  // Remplace description par un tableau de sections
     relations?: string[];
     imageUrl?: string;
+    canon?: boolean;
 }

@@ -149,6 +149,15 @@ export default function PageDetail() {
                 )}
             </div>
 
+            {!editMode && (
+                <p
+                    className={`inline-block px-3 py-1 rounded-full font-semibold mb-4 
+          ${page.canon ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                >
+                    {page.canon ? 'Lore canon' : 'Lore non canon'}
+                </p>
+            )}
+
             {error && <p className="mb-4 text-red-600">{error}</p>}
 
             {!editMode && (

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { PageType, Page } from "@/types/page";
 import { supabase } from "@/lib/supabaseClient";
+import {router} from "next/client";
 
 const pageTypes: PageType[] = [
     "personnage",
@@ -23,10 +24,13 @@ export default function AjouterPage() {
         relations: [] as string[],
         imageUrl: "",
         sections: [] as { title: string; content: string }[],
+        canon: true,
     });
 
     const [pages, setPages] = useState<Page[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const filteredRelations = pages.filter(p => p.canon === formData.canon);
 
     useEffect(() => {
         async function fetchPages() {
@@ -42,9 +46,13 @@ export default function AjouterPage() {
     }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData((f) => ({ ...f, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData((f) => ({
+            ...f,
+            [name]: type === "checkbox" ? checked : value,
+        }));
     };
+
 
     const handleRelationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const checked = e.target.checked;
@@ -59,13 +67,17 @@ export default function AjouterPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const newId = crypto.randomUUID();
+
         const newPage: Page = {
-            id: formData.id.toLowerCase().replace(/\s+/g, '-'),
+            id: newId,
             name: formData.name,
             type: formData.type,
             relations: formData.relations,
             imageUrl: formData.imageUrl ? formData.imageUrl : undefined,
             sections: formData.sections,
+            canon: formData.canon,
         };
 
         try {
@@ -75,6 +87,7 @@ export default function AjouterPage() {
                 return;
             }
             alert("Fiche ajoutée avec succès !");
+            await router.push("/");
             setPages((prev) => [...prev, newPage]);
             setFormData({
                 id: "",
@@ -83,6 +96,7 @@ export default function AjouterPage() {
                 relations: [],
                 imageUrl: "",
                 sections: [],
+                canon: true,
             });
         } catch {
             alert("Erreur lors de l’ajout de la fiche.");
@@ -96,24 +110,16 @@ export default function AjouterPage() {
             <h1 className="text-2xl font-bold mb-4">➕ Ajouter une fiche</h1>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <input
-                    name="id"
-                    placeholder="ID (ex: illidan)"
-                    required
-                    className="w-full p-2 border rounded"
-                    onChange={handleChange}
-                    value={formData.id}
-                />
-                <input
                     name="name"
                     placeholder="Nom"
                     required
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded "
                     onChange={handleChange}
                     value={formData.name}
                 />
                 <select
                     name="type"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded bg-black "
                     value={formData.type}
                     onChange={handleChange}
                 >
@@ -133,10 +139,20 @@ export default function AjouterPage() {
                     value={formData.imageUrl}
                 />
 
+                <label className="inline-flex items-center gap-2 mt-4">
+                    <input
+                        type="checkbox"
+                        name="canon"
+                        checked={formData.canon}
+                        onChange={handleChange}
+                    />
+                    <span>Cette fiche est canon</span>
+                </label>
+
                 {/* Relations */}
                 <label className="block font-semibold mt-4">Relations (checkbox)</label>
                 <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto border p-2 rounded">
-                    {pages.map((p) => (
+                    {filteredRelations.map((p) => (
                         <label key={p.id} className="flex items-center gap-2 text-sm">
                             <input
                                 type="checkbox"
@@ -148,6 +164,7 @@ export default function AjouterPage() {
                         </label>
                     ))}
                 </div>
+
 
                 {/* Sections dynamiques */}
                 <label className="block font-semibold mt-6 mb-2">Sections</label>
