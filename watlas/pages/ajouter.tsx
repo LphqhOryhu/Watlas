@@ -55,7 +55,11 @@ export default function AjouterPage() {
     }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value, type, checked } = e.target;
+        const target = e.target;
+        const name = target.name;
+        const value = target.value;
+        const type = target.type;
+        const checked = (target as HTMLInputElement).checked;
         setFormData((f) => ({
             ...f,
             [name]: type === "checkbox" ? checked : value,
