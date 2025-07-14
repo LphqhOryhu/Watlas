@@ -26,7 +26,7 @@ export default function PageCard({ page }: PageCardProps) {
                     alt={page.name}
                     width={600}
                     height={400}
-                    className="rounded mb-4"
+                    className="max-w-full max-h-80 object-cover rounded"
                     unoptimized={true} // si tu as besoin de désactiver l'optimisation Next.js
                 />
             ) : (

@@ -27,6 +27,15 @@ export default function AjouterPage() {
         canon: true,
     });
 
+    const predefinedSectionTitles = [
+        "Warcraft I",
+        "Warcraft II",
+        "Warcraft III",
+        "World of Warcraft",
+        "Warcraft Le Commencement",
+        "Autres"
+    ];
+
     const [pages, setPages] = useState<Page[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -170,21 +179,54 @@ export default function AjouterPage() {
                 <label className="block font-semibold mt-6 mb-2">Sections</label>
                 {formData.sections.map((section, i) => (
                     <div key={i} className="mb-4 border p-2 rounded">
-                        <input
-                            type="text"
-                            placeholder="Titre de la section"
-                            value={section.title}
+                        <label className="block mb-1 font-semibold">Titre de la section</label>
+
+                        <select
+                            className="w-full p-2 border rounded mb-2 bg-black"
+                            value={
+                                predefinedSectionTitles.includes(section.title)
+                                    ? section.title
+                                    : "Autres"
+                            }
                             onChange={e => {
-                                const val = e.target.value;
+                                const value = e.target.value;
                                 setFormData(f => {
                                     const newSections = [...f.sections];
-                                    newSections[i] = { ...newSections[i], title: val };
+                                    newSections[i] = {
+                                        ...newSections[i],
+                                        title: value === "Autres" ? "" : value
+                                    };
                                     return { ...f, sections: newSections };
                                 });
                             }}
-                            className="w-full p-1 border rounded mb-1"
                             required
-                        />
+                        >
+                            {predefinedSectionTitles.map((title) => (
+                                <option key={title} value={title}>
+                                    {title}
+                                </option>
+                            ))}
+                        </select>
+
+                        {(!predefinedSectionTitles.includes(section.title)) || section.title === "" ? (
+                            <input
+                                type="text"
+                                placeholder="Entrez un titre personnalisé"
+                                className="w-full p-2 border rounded mb-2"
+                                value={section.title}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setFormData(f => {
+                                        const newSections = [...f.sections];
+                                        newSections[i] = { ...newSections[i], title: val };
+                                        return { ...f, sections: newSections };
+                                    });
+                                }}
+                                required
+                            />
+                        ) : null}
+
+                        <label className="block mb-1 font-semibold">Contenu de la section</label>
                         <textarea
                             placeholder="Contenu de la section"
                             rows={3}
@@ -197,9 +239,10 @@ export default function AjouterPage() {
                                     return { ...f, sections: newSections };
                                 });
                             }}
-                            className="w-full p-1 border rounded"
+                            className="w-full p-2 border rounded"
                             required
                         />
+
                         <button
                             type="button"
                             onClick={() => {

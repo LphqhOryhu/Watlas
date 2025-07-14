@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { Page } from "@/types/page";
+import {Page, PageType} from "@/types/page";
 import PageCard from "@/components/PageCard";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -15,6 +15,26 @@ export default function Home() {
         }
         return true;
     });
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const allPageTypes: PageType[] = [
+        "personnage",
+        "lieu",
+        "groupe",
+        "objet",
+        "événement",
+        "période",
+        "année",
+        "support_narratif",
+    ];
+
+    const [selectedTypes, setSelectedTypes] = useState<PageType[]>([...allPageTypes]);
+
+    const toggleType = (type: PageType) => {
+        setSelectedTypes((prev) =>
+            prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+        );
+    };
 
     useEffect(() => {
         async function fetchPages() {
@@ -39,11 +59,14 @@ export default function Home() {
     if (pages.length === 0) return <p>Aucune fiche trouvée.</p>;
 
     // Filtrer les pages selon le choix
-    const filteredPages = pages.filter(p => (p.canon ?? false) === showCanon);
-
+    const filteredPages = pages.filter(p =>
+        (p.canon ?? false) === showCanon &&
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        selectedTypes.includes(p.type)
+    );
     return (
         <main className="p-8">
-            <h1 className="text-3xl font-bold mb-6">📚 Watlas — Atlas Warcraft</h1>
+            <h1 className="text-3xl font-bold mb-6">Watlas</h1>
 
             <div className="mb-6 flex items-center gap-4">
                 <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -55,13 +78,41 @@ export default function Home() {
                     />
                     <span>Afficher {showCanon ? 'le lore canon' : 'le lore non-canon'}</span>
                 </label>
+                <input
+                    type="search"
+                    placeholder="Rechercher par nom..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className="flex-1 p-2 border rounded shadow-sm focus:outline-none focus:ring focus:ring-blue-400"
+                />
+                <div className="flex flex-wrap gap-4 items-center max-w-lg">
+                    {allPageTypes.map((type) => (
+                        <label
+                            key={type}
+                            className="flex items-center gap-2 cursor-pointer select-none"
+                        >
+                            <input
+                                type="checkbox"
+                                checked={selectedTypes.includes(type)}
+                                onChange={() => toggleType(type)}
+                                className="w-4 h-4 cursor-pointer"
+                            />
+                            <span>{type}</span>
+                        </label>
+                    ))}
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPages.map((page) => (
-                    <PageCard key={page.id} page={page} />
-                ))}
-            </div>
+            {filteredPages.length === 0 ? (
+                <p>Aucun résultat trouvé.</p>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredPages.map((page) => (
+                        <PageCard key={page.id} page={page} />
+                    ))}
+                </div>
+            )}
+
         </main>
     );
 }
