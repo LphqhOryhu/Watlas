@@ -282,7 +282,7 @@ export default function PageDetail() {
                                             const val = e.target.value;
                                             setFormData((f) => {
                                                 if (!f) return null;
-                                                const newSections = [...f.sections];
+                                                const newSections = [...(f.sections ?? [])];
                                                 newSections[i] = { ...newSections[i], title: val };
                                                 return { ...f, sections: newSections };
                                             });
