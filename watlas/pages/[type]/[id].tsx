@@ -18,6 +18,15 @@ export default function PageDetail() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const predefinedSectionTitles = [
+        "Warcraft I",
+        "Warcraft II",
+        "Warcraft III",
+        "World of Warcraft",
+        "Warcraft Le Commencement",
+        "Autres",
+    ];
+
 
     // Charger la fiche courante
     useEffect(() => {
@@ -234,32 +243,63 @@ export default function PageDetail() {
                         <label className="block font-semibold mb-2">Sections</label>
                         {formData.sections?.map((section, i) => (
                             <div key={i} className="mb-4 border p-2 rounded">
-                                <input
-                                    type="text"
-                                    name={`section-title-${i}`}
-                                    value={section.title}
-                                    placeholder="Titre de la section"
-                                    onChange={e => {
+                                <select
+                                    className="w-full p-2 border rounded mb-2 bg-black"
+                                    value={
+                                        predefinedSectionTitles.includes(section.title)
+                                            ? section.title
+                                            : "Autres"
+                                    }
+                                    onChange={(e) => {
                                         const value = e.target.value;
-                                        setFormData(f => {
+                                        setFormData((f) => {
                                             if (!f) return null;
-                                            const newSections = [...(f.sections || [])];
-                                            newSections[i] = { ...newSections[i], title: value };
+                                            const newSections = [...f.sections];
+                                            newSections[i] = {
+                                                ...newSections[i],
+                                                title: value === "Autres" ? "" : value,
+                                            };
                                             return { ...f, sections: newSections };
                                         });
                                     }}
-                                    className="w-full p-1 border rounded mb-1"
                                     required
                                     disabled={saving}
-                                />
+                                >
+                                    {predefinedSectionTitles.map((title) => (
+                                        <option key={title} value={title}>
+                                            {title}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {(!predefinedSectionTitles.includes(section.title) || section.title === "") && (
+                                    <input
+                                        type="text"
+                                        placeholder="Entrez un titre personnalisé"
+                                        className="w-full p-2 border rounded mb-2"
+                                        value={section.title}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setFormData((f) => {
+                                                if (!f) return null;
+                                                const newSections = [...f.sections];
+                                                newSections[i] = { ...newSections[i], title: val };
+                                                return { ...f, sections: newSections };
+                                            });
+                                        }}
+                                        required
+                                        disabled={saving}
+                                    />
+                                )}
+
                                 <textarea
                                     name={`section-content-${i}`}
                                     value={section.content}
                                     placeholder="Contenu de la section"
                                     rows={3}
-                                    onChange={e => {
+                                    onChange={(e) => {
                                         const value = e.target.value;
-                                        setFormData(f => {
+                                        setFormData((f) => {
                                             if (!f) return null;
                                             const newSections = [...(f.sections || [])];
                                             newSections[i] = { ...newSections[i], content: value };
@@ -273,7 +313,7 @@ export default function PageDetail() {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setFormData(f => {
+                                        setFormData((f) => {
                                             if (!f) return null;
                                             const newSections = [...(f.sections || [])];
                                             newSections.splice(i, 1);
@@ -287,10 +327,11 @@ export default function PageDetail() {
                                 </button>
                             </div>
                         ))}
+
                         <button
                             type="button"
                             onClick={() => {
-                                setFormData(f => ({
+                                setFormData((f) => ({
                                     ...f!,
                                     sections: [...(f?.sections || []), { title: "", content: "" }],
                                 }));
@@ -301,6 +342,7 @@ export default function PageDetail() {
                             Ajouter une section
                         </button>
                     </div>
+
 
 
                     <label className="block">
@@ -342,21 +384,38 @@ export default function PageDetail() {
                         />
                     </label>
 
-                    <label className="block font-semibold mt-4">Relations</label>
+                    <label className="block font-semibold mt-4 flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            name="canon"
+                            checked={formData.canon}
+                            onChange={(e) => {
+                                const checked = e.target.checked;
+                                setFormData((f) => (f ? { ...f, canon: checked } : null));
+                            }}
+                            disabled={saving}
+                        />
+                        <span>Cette fiche est canon</span>
+                    </label>
+
+                    <label className="block font-semibold mt-2">Relations (filtrées par canon)</label>
                     <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto border p-2 rounded">
-                        {pages.map((p) => (
-                            <label key={p.id} className="flex items-center gap-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    value={p.id}
-                                    checked={formData.relations?.includes(p.id) ?? false}
-                                    onChange={handleRelationChange}
-                                    disabled={saving}
-                                />
-                                {p.name} <span className="text-gray-500">({p.type})</span>
-                            </label>
-                        ))}
+                        {pages
+                            .filter((p) => p.canon === formData.canon && p.id !== page.id)
+                            .map((p) => (
+                                <label key={p.id} className="flex items-center gap-2 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        value={p.id}
+                                        checked={formData.relations?.includes(p.id) ?? false}
+                                        onChange={handleRelationChange}
+                                        disabled={saving}
+                                    />
+                                    {p.name} <span className="text-gray-500">({p.type})</span>
+                                </label>
+                            ))}
                     </div>
+
 
                     <div className="flex gap-4">
                         <button
