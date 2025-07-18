@@ -4,9 +4,15 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
 
+interface UserProfile {
+    id: string;
+    email: string;
+    role: 'viewer' | 'editor' | 'admin';
+}
+
 export default function AdminPage() {
     const { role, loading } = useAuth()
-    const [users, setUsers] = useState<any[]>([])
+    const [users, setUsers] = useState<UserProfile[]>([])
     const [refresh, setRefresh] = useState(false)
 
     useEffect(() => {
