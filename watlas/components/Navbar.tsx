@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 
 export default function Navbar() {
-    const { user, role, loading } = useAuth();
+    const { user, loading } = useAuth();
 
     const handleLogout = async () => {
         await supabase.auth.signOut();

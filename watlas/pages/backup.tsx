@@ -9,8 +9,7 @@ interface Backup {
     id: string;
     created_at: string;
     name: string;
-    data: any;
-}
+    data: Record<string, unknown>[];}
 
 export default function BackupPage() {
     const { role } = useAuth();

@@ -22,7 +22,6 @@ export default function Sidebar() {
             } bg-gray-900 text-white overflow-hidden`}
         >
             <div className="h-full flex flex-col p-2">
-                {/* Toggle bouton */}
                 <button
                     onClick={toggle}
                     className="self-end mb-4 px-2 text-gray-400 hover:text-white"

@@ -18,7 +18,7 @@ export default function PageDetail() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { role, loading: authLoading } = useAuth();
+    const { role } = useAuth();
     const predefinedSectionTitles = [
         "Warcraft I",
         "Warcraft II",
