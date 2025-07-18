@@ -43,7 +43,7 @@ export default function Sidebar() {
                     )}
 
                     <Link href="/timeline" className={linkClass('/timeline')}>📅 {open && 'Frise'}</Link>
-                    <Link href="/commentaire" className={linkClass('/commentaire')}>💬 {open && 'Commentaire'}</Link>
+                    <Link href="/commentaires" className={linkClass('/commentaire')}>💬 {open && 'Commentaire'}</Link>
                     <Link href="/about" className={linkClass('/about')}>📜 {open && 'À propos'}</Link>
                 </nav>
 
