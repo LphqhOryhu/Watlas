@@ -30,7 +30,7 @@ export default function PageCard({ page }: PageCardProps) {
                     unoptimized={true} // si tu as besoin de désactiver l'optimisation Next.js
                 />
             ) : (
-                <div className="w-full h-48 bg-gray-200 rounded mb-4 flex items-center justify-center text-gray-400">
+                <div className="w-full h-48 bg-gray-900 rounded mb-4 flex items-center justify-center text-white">
                     Pas d&apos;image
                 </div>
             )}

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/context/AuthContext';
 import { Page } from '@/types/page';
 import Image from 'next/image';
 
@@ -17,7 +18,7 @@ export default function PageDetail() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
+    const { role, loading: authLoading } = useAuth();
     const predefinedSectionTitles = [
         "Warcraft I",
         "Warcraft II",
@@ -95,6 +96,11 @@ export default function PageDetail() {
     };
 
     const handleSave = async (e: React.FormEvent) => {
+        if (!['editor', 'admin'].includes(role || '')) {
+            setError("Vous n'avez pas le droit de modifier cette fiche.");
+            return;
+        }
+
         e.preventDefault();
         if (!formData) return;
 
@@ -142,12 +148,17 @@ export default function PageDetail() {
             router.push('/');
         }
     };
+    if (editMode && !['editor', 'admin'].includes(role || '')) {
+        return <p className="p-8 text-center text-red-600">Accès interdit. Rôle insuffisant.</p>;
+    }
+
 
     return (
+        <div className="relative">
         <main className="p-8 max-w-2xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">{page.name}</h1>
-                {!editMode && (
+                {!editMode && ['editor', 'admin'].includes(role || '') && (
                     <button
                         onClick={() => setEditMode(true)}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -156,6 +167,7 @@ export default function PageDetail() {
                         Modifier
                     </button>
                 )}
+
             </div>
 
             {!editMode && (
@@ -188,38 +200,10 @@ export default function PageDetail() {
                         formData.sections.map((section, i) => (
                             <section key={i} className="mb-6">
                                 <h3 className="text-xl font-semibold">{section.title}</h3>
-                                <p>{section.content}</p>
-                            </section>
+                                <p className="whitespace-pre-wrap">{section.content}</p>                            </section>
                         ))
                     ) : (
                         <p>Aucune section disponible.</p>
-                    )}
-
-
-                    {page.relations && page.relations.length > 0 && (
-                        <div>
-                            <h2 className="font-semibold mt-4 mb-2">Relations</h2>
-                            <ul className="list-disc list-inside">
-                                {page.relations.map((relId) => {
-                                    const relPage = pages.find((p) => p.id === relId);
-                                    return (
-                                        <li
-                                            key={relId}
-                                            className="text-blue-600 hover:underline cursor-pointer"
-                                            onClick={() => {
-                                                if (relPage) {
-                                                    router.push(`/${relPage.type}/${relPage.id}`);
-                                                } else {
-                                                    router.push(`/${relId}`);
-                                                }
-                                            }}
-                                        >
-                                            {relPage ? relPage.name : relId}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
                     )}
                 </div>
             )}
@@ -437,18 +421,50 @@ export default function PageDetail() {
                         >
                             Annuler
                         </button>
-                        <button
-                            type="button"
-                            onClick={handleDelete}
-                            className="ml-auto bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
-                            disabled={saving}
-                        >
-                            Supprimer
-                        </button>
+                        {role === 'admin' && (
+                            <button
+                                type="button"
+                                onClick={handleDelete}
+                                className="ml-auto bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
+                                disabled={saving}
+                            >
+                                Supprimer
+                            </button>
+                        )}
+
                     </div>
                 </form>
             )}
         </main>
+            {!editMode && page.relations && page.relations.length > 0 && (                <aside className="fixed top-28 right-8 w-72 bg-gray-900 text-white border border-gray-700 rounded shadow-lg p-4 max-h-[80vh] overflow-y-auto z-50">
+                    {page.relations && page.relations.length > 0 && (
+                        <div>
+                            <h2 className="font-semibold mt-4 mb-2">Relations</h2>
+                            <ul className="list-disc list-inside">
+                                {page.relations.map((relId) => {
+                                    const relPage = pages.find((p) => p.id === relId);
+                                    return (
+                                        <li
+                                            key={relId}
+                                            className="text-blue-600 hover:underline cursor-pointer"
+                                            onClick={() => {
+                                                if (relPage) {
+                                                    router.push(`/${relPage.type}/${relPage.id}`);
+                                                } else {
+                                                    router.push(`/${relId}`);
+                                                }
+                                            }}
+                                        >
+                                            {relPage ? relPage.name : relId}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    )}
+                </aside>
+            )}
+        </div>
     );
 
 }
