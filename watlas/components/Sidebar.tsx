@@ -33,7 +33,11 @@ export default function Sidebar() {
 
                 {/* Liens */}
                 <nav className="flex-1 space-y-1 text-sm">
-                    <Link href="/ajouter" className={linkClass('/ajouter')}>➕ {open && 'Ajouter une fiche'}</Link>
+                    {(role === 'admin' || role === 'editor') && (
+                        <Link href="/ajouter" className={linkClass('/ajouter')}>
+                            ➕ {open && 'Ajouter une fiche'}
+                        </Link>
+                    )}
 
                     {role === 'admin' && (
                         <>
