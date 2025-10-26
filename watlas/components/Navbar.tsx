@@ -5,6 +5,9 @@ import { supabase } from '@/lib/supabaseClient';
 export default function Navbar() {
     const { user, loading } = useAuth();
 
+    // Debug logs
+    console.log('Navbar - loading:', loading, 'user:', user);
+
     const handleLogout = async () => {
         await supabase.auth.signOut();
         window.location.href = '/';

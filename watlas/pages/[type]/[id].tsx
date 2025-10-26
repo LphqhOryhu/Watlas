@@ -368,7 +368,7 @@ export default function PageDetail() {
                         />
                     </label>
 
-                    <label className="block font-semibold mt-4 flex items-center gap-2">
+                    <label className="flex items-center gap-2 font-semibold mt-4">
                         <input
                             type="checkbox"
                             name="canon"
