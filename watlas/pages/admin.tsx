@@ -11,19 +11,19 @@ interface UserProfile {
 }
 
 export default function AdminPage() {
-    const { role, loading } = useAuth()
+    const { user, loading } = useAuth()
     const [users, setUsers] = useState<UserProfile[]>([])
     const [refresh, setRefresh] = useState(false)
 
     useEffect(() => {
-        if (role === 'admin') {
+        if (user) {
             const fetchUsers = async () => {
                 const { data, error } = await supabase.from('profiles').select('*')
                 if (!error) setUsers(data)
             }
             fetchUsers()
         }
-    }, [role, refresh])
+    }, [user, refresh])
 
     const handleRoleChange = async (id: string, newRole: string) => {
         await supabase.from('profiles').update({ role: newRole }).eq('id', id)
@@ -31,7 +31,7 @@ export default function AdminPage() {
     }
 
     if (loading) return <p>Chargement...</p>
-    if (role !== 'admin') return <p className="text-center mt-8 text-red-500">Accès interdit</p>
+    if (!user) return <p className="text-center mt-8 text-red-500">Vous devez être connecté</p>
 
     return (
         <main className="p-8 max-w-4xl mx-auto text-white">

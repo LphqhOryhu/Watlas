@@ -12,11 +12,11 @@ interface Comment {
 }
 
 export default function CommentPage() {
-    const { user, role } = useAuth();
+    const { user } = useAuth();
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
     const [loading, setLoading] = useState(true);
-    const [isAdminView, setIsAdminView] = useState(role === 'admin');
+    const [isAdminView, setIsAdminView] = useState(false);
 
     useEffect(() => {
         fetchComments();
@@ -55,7 +55,7 @@ export default function CommentPage() {
         <div className="p-6 max-w-3xl mx-auto space-y-4">
             <h1 className="text-2xl font-bold">💬 Commentaires</h1>
 
-            {role === 'admin' && (
+            {user && (
                 <label className="flex items-center space-x-2">
                     <input
                         type="checkbox"

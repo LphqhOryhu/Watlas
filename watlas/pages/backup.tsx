@@ -12,14 +12,15 @@ interface Backup {
     data: Record<string, unknown>[];}
 
 export default function BackupPage() {
-    const { role } = useAuth();
+    const { user } = useAuth();
     const [backups, setBackups] = useState<Backup[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (role !== 'admin') return;
-        fetchBackups();
-    }, [role]);
+        if (user) {
+            fetchBackups();
+        }
+    }, [user]);
 
     async function fetchBackups() {
         setLoading(true);
@@ -76,7 +77,7 @@ export default function BackupPage() {
         alert('Backup copiée dans le presse-papier.');
     }
 
-    if (role !== 'admin') return <p className="p-4">⛔ Accès interdit</p>;
+    if (!user) return <p className="p-4">⛔ Vous devez être connecté</p>;
 
     return (
         <div className="p-6 max-w-4xl mx-auto">

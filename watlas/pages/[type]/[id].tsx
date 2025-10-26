@@ -18,7 +18,7 @@ export default function PageDetail() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { role } = useAuth();
+    const { user } = useAuth();
     const predefinedSectionTitles = [
         "Warcraft I",
         "Warcraft II",
@@ -96,8 +96,8 @@ export default function PageDetail() {
     };
 
     const handleSave = async (e: React.FormEvent) => {
-        if (!['editor', 'admin'].includes(role || '')) {
-            setError("Vous n'avez pas le droit de modifier cette fiche.");
+        if (!user) {
+            setError("Vous devez être connecté pour modifier cette fiche.");
             return;
         }
 
@@ -148,8 +148,8 @@ export default function PageDetail() {
             router.push('/');
         }
     };
-    if (editMode && !['editor', 'admin'].includes(role || '')) {
-        return <p className="p-8 text-center text-red-600">Accès interdit. Rôle insuffisant.</p>;
+    if (editMode && !user) {
+        return <p className="p-8 text-center text-red-600">Vous devez être connecté pour modifier cette page.</p>;
     }
 
 
@@ -158,7 +158,7 @@ export default function PageDetail() {
         <main className="p-8 max-w-2xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">{page.name}</h1>
-                {!editMode && ['editor', 'admin'].includes(role || '') && (
+                {!editMode && user && (
                     <button
                         onClick={() => setEditMode(true)}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -421,7 +421,7 @@ export default function PageDetail() {
                         >
                             Annuler
                         </button>
-                        {role === 'admin' && (
+                        {user && (
                             <button
                                 type="button"
                                 onClick={handleDelete}

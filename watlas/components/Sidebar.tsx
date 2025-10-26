@@ -7,7 +7,7 @@ import { useSidebar } from '@/context/SidebarContext';
 
 export default function Sidebar() {
     const pathname = usePathname();
-    const { user, role } = useAuth();
+    const { user } = useAuth();
     const { open, toggle } = useSidebar();
 
     const linkClass = (path: string) =>
@@ -32,13 +32,13 @@ export default function Sidebar() {
 
                 {/* Liens */}
                 <nav className="flex-1 space-y-1 text-sm">
-                    {(role === 'admin' || role === 'editor') && (
+                    {user && (
                         <Link href="/ajouter" className={linkClass('/ajouter')}>
                             ➕ {open && 'Ajouter une fiche'}
                         </Link>
                     )}
 
-                    {role === 'admin' && (
+                    {user && (
                         <>
                             <Link href="/admin" className={linkClass('/admin')}>👑 {open && 'Vue admin'}</Link>
                             <Link href="/backup" className={linkClass('/backup')}>💾 {open && 'Backup'}</Link>

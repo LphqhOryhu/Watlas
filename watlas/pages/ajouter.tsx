@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { PageType, Page } from "@/types/page";
 import { supabase } from "@/lib/supabaseClient";
-import {router} from "next/client";
+import { useRouter } from "next/router";
+import { useAuth } from "@/context/AuthContext";
 
 const pageTypes: PageType[] = [
     "personnage",
@@ -17,6 +18,8 @@ const pageTypes: PageType[] = [
 ];
 
 export default function AjouterPage() {
+    const router = useRouter();
+    const { user, loading: authLoading } = useAuth();
     const [formData, setFormData] = useState({
         id: "",
         name: "",
@@ -100,7 +103,7 @@ export default function AjouterPage() {
                 return;
             }
             alert("Fiche ajoutée avec succès !");
-            await router.push("/");
+            router.push("/");
             setPages((prev) => [...prev, newPage]);
             setFormData({
                 id: "",
@@ -116,7 +119,18 @@ export default function AjouterPage() {
         }
     };
 
-    if (loading) return <p>Chargement des pages...</p>;
+    useEffect(() => {
+        if (!authLoading && !user) {
+            alert("Vous devez être connecté pour créer des pages.");
+            router.push('/login');
+        }
+    }, [authLoading, user, router]);
+
+    if (loading || authLoading) return <p>Chargement...</p>;
+
+    if (!user) {
+        return <p>Vous devez être connecté pour accéder à cette page.</p>;
+    }
 
     return (
         <main className="p-8 max-w-2xl mx-auto">

@@ -7,7 +7,6 @@ export default function Navbar() {
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
-        document.cookie = 'role=viewer; path=/';
         window.location.href = '/';
     };
 

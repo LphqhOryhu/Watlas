@@ -21,11 +21,6 @@ export default function LoginPage() {
 
             if (error) return alert(error.message)
             if (data.user) {
-                await supabase.from('profiles').insert({
-                    id: data.user.id,
-                    email: data.user.email,
-                    role: 'viewer'
-                })
                 router.push('/')
             }
         }
