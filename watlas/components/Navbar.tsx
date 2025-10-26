@@ -21,10 +21,9 @@ export default function Navbar() {
                 {!loading && user ? (
                     <button
                         onClick={handleLogout}
-                        title="Déconnexion"
-                        className="text-xl hover:text-red-400"
+                        className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm text-white"
                     >
-                        ⏻
+                        Se déconnecter
                     </button>
                 ) : (
                     <Link
