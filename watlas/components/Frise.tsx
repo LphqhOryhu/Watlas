@@ -10,17 +10,37 @@ interface Page {
     type: string;
     relations?: string[];
     slug?: string;
+    univers?: string;
 }
 
 export default function Frise() {
     const [allPages, setAllPages] = useState<Page[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedUnivers, setSelectedUnivers] = useState<string | null>(null);
+
+    useEffect(() => {
+        // lire la sélection depuis localStorage au montage
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('selectedUnivers');
+            if (stored === null) setSelectedUnivers(null);
+            else setSelectedUnivers(stored);
+        }
+
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === 'selectedUnivers') {
+                setSelectedUnivers(e.newValue);
+            }
+        };
+
+        window.addEventListener('storage', handleStorage);
+        return () => window.removeEventListener('storage', handleStorage);
+    }, []);
 
     useEffect(() => {
         async function fetchPages() {
             const { data, error } = await supabase
                 .from('pages')
-                .select('id, name, type, relations')
+                .select('id, name, type, relations, univers')
                 .order('name', { ascending: true });
 
             if (error) console.error(error);
@@ -33,7 +53,24 @@ export default function Frise() {
 
     if (loading) return <p className="p-4">Chargement de la frise...</p>;
 
-    const datePages = allPages.filter((p) => p.type === 'année');
+    if (selectedUnivers === null) {
+        return (
+            <div className="p-6">
+                <h1 className="text-2xl font-bold mb-4">🕰️ Frise chronologique</h1>
+                <p className="text-gray-500">
+                    Veuillez sélectionner un univers pour afficher la frise.
+                </p>
+            </div>
+        );
+    }
+
+    // filtrer par univers si selectedUnivers non vide
+    const pagesToUse =
+        selectedUnivers === ''
+            ? allPages
+            : allPages.filter((p) => (p.univers ?? '') === selectedUnivers);
+
+    const datePages = pagesToUse.filter((p) => p.type === 'année');
 
     return (
         <div className="p-6 overflow-x-auto">
@@ -41,7 +78,7 @@ export default function Frise() {
 
             <div className="space-y-8">
                 {datePages.map((yearPage) => {
-                    const linkedPages = allPages.filter((p) =>
+                    const linkedPages = pagesToUse.filter((p) =>
                         p.relations?.includes(yearPage.id)
                     );
 

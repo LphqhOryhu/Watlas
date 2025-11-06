@@ -21,4 +21,5 @@ export interface Page {
     relations?: string[];
     imageUrl?: string;
     canon?: boolean;
+    univers?: string; // Champ optionnel 'univers' (correspond au champ en base, ex: 'wow')
 }

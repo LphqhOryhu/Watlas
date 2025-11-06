@@ -28,6 +28,7 @@ export default function AjouterPage() {
         imageUrl: "",
         sections: [] as { title: string; content: string }[],
         canon: true,
+        univers: "", // nouveau champ univers
     });
 
     const predefinedSectionTitles = [
@@ -39,10 +40,23 @@ export default function AjouterPage() {
         "Autres"
     ];
 
+    // exemples d'univers (valeurs stockées en base)
+    const exampleUniverses = [
+        { label: 'World of Warcraft', value: 'wow' },
+        { label: 'Attack on Titan', value: 'snk' },
+        { label: 'Burggeist', value: 'bur' },
+    ];
+
     const [pages, setPages] = useState<Page[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const filteredRelations = pages.filter(p => p.canon === formData.canon);
+    // Ne proposer que les pages du même canon ET du même univers que celui choisi dans le formulaire.
+    // Si aucun univers choisi (formData.univers === ''), on ne propose aucune relation pour éviter de lier des univers différents.
+    const filteredRelations = pages.filter(p =>
+        p.canon === formData.canon &&
+        // comparer les valeurs exactes d'univers (undefined treated as '')
+        ((formData.univers ?? '') !== '' ? (p.univers ?? '') === (formData.univers ?? '') : false)
+    );
 
     useEffect(() => {
         async function fetchPages() {
@@ -69,7 +83,6 @@ export default function AjouterPage() {
         }));
     };
 
-
     const handleRelationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const checked = e.target.checked;
         const value = e.target.value;
@@ -94,6 +107,7 @@ export default function AjouterPage() {
             imageUrl: formData.imageUrl ? formData.imageUrl : undefined,
             sections: formData.sections,
             canon: formData.canon,
+            univers: formData.univers ? formData.univers : undefined,
         };
 
         try {
@@ -113,6 +127,7 @@ export default function AjouterPage() {
                 imageUrl: "",
                 sections: [],
                 canon: true,
+                univers: "",
             });
         } catch {
             alert("Erreur lors de l’ajout de la fiche.");
@@ -157,6 +172,42 @@ export default function AjouterPage() {
                     ))}
                 </select>
 
+                {/* Champ univers */}
+                <label className="block">
+                    Univers
+                    <select
+                        name="univers"
+                        value={exampleUniverses.find(u => u.value === (formData.univers ?? '')) ? (formData.univers ?? exampleUniverses[0].value) : 'other'}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === 'other') {
+                                setFormData((f) => ({ ...f, univers: '' }));
+                            } else {
+                                setFormData((f) => ({ ...f, univers: val }));
+                            }
+                        }}
+                        className="w-full p-2 border rounded"
+                    >
+                        {exampleUniverses.map((u) => (
+                            <option key={u.value} value={u.value}>{u.label}</option>
+                        ))}
+                        <option value="other">Autre</option>
+                    </select>
+                </label>
+
+                {formData.univers === '' && (
+                    <label className="block">
+                        Préciser l'univers
+                        <input
+                            name="univers"
+                            value={formData.univers}
+                            onChange={handleChange}
+                            placeholder="Entrez l'univers (ex: wow)"
+                            className="w-full p-2 border rounded"
+                        />
+                    </label>
+                )}
+
                 <input
                     type="url"
                     name="imageUrl"
@@ -191,7 +242,6 @@ export default function AjouterPage() {
                         </label>
                     ))}
                 </div>
-
 
                 {/* Sections dynamiques */}
                 <label className="block font-semibold mt-6 mb-2">Sections</label>

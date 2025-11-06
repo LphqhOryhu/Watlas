@@ -28,6 +28,12 @@ export default function PageDetail() {
         "Autres",
     ];
 
+    const exampleUniverses = [
+        { label: 'World Of Warcraft', value: 'wow' },
+        { label: 'Attack On Titan', value: 'snk' },
+        { label: 'Burggeist', value: 'bur' },
+    ];
+
 
     // Charger la fiche courante
     useEffect(() => {
@@ -76,6 +82,13 @@ export default function PageDetail() {
     if (loading) return <p className="p-8 text-center">Chargement...</p>;
     if (error) return <p className="p-8 text-center text-red-600">{error}</p>;
     if (!page || !formData) return <p className="p-8 text-center">Fiche introuvable...</p>;
+
+    // Filtrer les pages à proposer en relations: même canon ET même univers (si univers défini)
+    const filteredRelations = pages.filter((p) =>
+        p.canon === formData.canon &&
+        p.id !== page.id &&
+        ((formData.univers ?? '') !== '' ? (p.univers ?? '') === (formData.univers ?? '') : false)
+    );
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -196,6 +209,14 @@ export default function PageDetail() {
                     <p>
                         <strong>Type :</strong> {page.type}
                     </p>
+
+                    {/* Affichage de l'univers si présent */}
+                    {page.univers && (
+                        <p>
+                            <strong>Univers :</strong> {page.univers}
+                        </p>
+                    )}
+
                     {formData.sections && formData.sections.length > 0 ? (
                         formData.sections.map((section, i) => (
                             <section key={i} className="mb-6">
@@ -328,7 +349,6 @@ export default function PageDetail() {
                     </div>
 
 
-
                     <label className="block">
                         Type
                         <select
@@ -354,6 +374,49 @@ export default function PageDetail() {
                             ))}
                         </select>
                     </label>
+
+                    {/* Champ univers: select + si 'Autre' -> champ texte */}
+                    <label className="block">
+                        Univers
+                        <select
+                            name="univers"
+                            value={
+                                exampleUniverses.find(u => u.value === (formData.univers ?? ''))
+                                    ? (formData.univers ?? exampleUniverses[0].value)
+                                    : 'other'
+                            }
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === 'other') {
+                                    setFormData((f) => (f ? { ...f, univers: '' } : null));
+                                } else {
+                                    setFormData((f) => (f ? { ...f, univers: val } : null));
+                                }
+                            }}
+                            className="w-full p-2 border rounded"
+                            disabled={saving}
+                        >
+                            {exampleUniverses.map((u) => (
+                                <option key={u.value} value={u.value}>{u.label}</option>
+                            ))}
+                            <option value="other">Autre</option>
+                        </select>
+                    </label>
+
+                    {/* Si univers est une chaîne vide (Autre), afficher un champ texte */}
+                    {formData.univers === '' && (
+                        <label className="block">
+                            Préciser l'univers
+                            <input
+                                name="univers"
+                                value={formData.univers}
+                                onChange={handleChange}
+                                placeholder="Entrez l'univers"
+                                className="w-full p-2 border rounded"
+                                disabled={saving}
+                            />
+                        </label>
+                    )}
 
                     <label className="block">
                         URL de l’image
@@ -382,11 +445,12 @@ export default function PageDetail() {
                         <span>Cette fiche est canon</span>
                     </label>
 
-                    <label className="block font-semibold mt-2">Relations (filtrées par canon)</label>
+                    <label className="block font-semibold mt-2">Relations (filtrées par canon et univers)</label>
                     <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto border p-2 rounded">
-                        {pages
-                            .filter((p) => p.canon === formData.canon && p.id !== page.id)
-                            .map((p) => (
+                        {filteredRelations.length === 0 ? (
+                            <p className="text-sm text-gray-500">Aucune relation disponible pour le canon/univers sélectionné.</p>
+                        ) : (
+                            filteredRelations.map((p) => (
                                 <label key={p.id} className="flex items-center gap-2 text-sm">
                                     <input
                                         type="checkbox"
@@ -397,7 +461,8 @@ export default function PageDetail() {
                                     />
                                     {p.name} <span className="text-gray-500">({p.type})</span>
                                 </label>
-                            ))}
+                            ))
+                        )}
                     </div>
 
 

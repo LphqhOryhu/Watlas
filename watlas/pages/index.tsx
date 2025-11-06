@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Page, PageType } from "@/types/page";
 import PageCard from "@/components/PageCard";
 import { supabase } from "@/lib/supabaseClient";
@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabaseClient";
 export default function Home() {
     const [pages, setPages] = useState<Page[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingUniverses, setLoadingUniverses] = useState(true);
     const [showCanon, setShowCanon] = useState<boolean>(() => {
         if (typeof window !== "undefined") {
             const stored = localStorage.getItem("showCanon");
@@ -28,6 +29,102 @@ export default function Home() {
         );
     };
 
+    // selectedUnivers contient la valeur telle qu'en base (ex: 'wow') ou null si non sélectionné
+    const [selectedUnivers, setSelectedUnivers] = useState<string | null>(null);
+
+    // initialiser selectedUnivers depuis localStorage
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const stored = localStorage.getItem('selectedUnivers');
+        if (stored === null) setSelectedUnivers(null);
+        else setSelectedUnivers(stored);
+    }, []);
+
+    // centraliser la sélection d'univers pour persister en localStorage
+    const selectUnivers = (u: string | null) => {
+        setSelectedUnivers(u);
+        if (typeof window === 'undefined') return;
+        if (u === null) localStorage.removeItem('selectedUnivers');
+        else localStorage.setItem('selectedUnivers', u);
+    };
+
+    // liste d'univers récupérée séparément (pour afficher les boutons avant le chargement complet des fiches)
+    const [universList, setUniversList] = useState<string[]>([]);
+
+    // mapping technique -> label lisible
+    const universLabels: Record<string, string> = {
+        wow: 'World of Warcraft',
+        warcraft: 'Warcraft',
+        doctor_who: 'Doctor Who',
+        star_wars: 'Star Wars',
+        other: 'Autre',
+    };
+
+    // Calculer la liste unique des univers présents dans `pages` (non vides) si besoin secondaire
+    const universesFromPages = useMemo(() => {
+        const setVals = new Set<string>();
+        for (const p of pages) {
+            if (typeof p.univers === 'string' && p.univers.trim() !== '') {
+                setVals.add(p.univers);
+            }
+        }
+        return Array.from(setVals);
+    }, [pages]);
+
+    // afficher les univers disponibles pour les boutons : priorité à la liste fetchée,
+    // fallback sur universesFromPages puis sur les clés de universLabels
+    const displayUniverses = useMemo(() => {
+        if (loadingUniverses) {
+            return universesFromPages.length ? universesFromPages : Object.keys(universLabels);
+        }
+        if (universList && universList.length > 0) return universList;
+        if (universesFromPages.length) return universesFromPages;
+        return Object.keys(universLabels);
+    }, [loadingUniverses, universList, universesFromPages]);
+
+    // calculer comptage par univers (utilisé pour afficher les compteurs)
+    const countsByUnivers = useMemo(() => {
+        const map = new Map<string, number>();
+        for (const p of pages) {
+            const u = (p.univers ?? '').trim();
+            if (u === '') continue;
+            map.set(u, (map.get(u) ?? 0) + 1);
+        }
+        return map;
+    }, [pages]);
+
+    useEffect(() => {
+        // Fetch univers distincts (léger) pour afficher les boutons immédiatement
+        async function fetchUniverses() {
+            setLoadingUniverses(true);
+            try {
+                const { data, error } = await supabase.from('pages').select('univers');
+                if (error) throw error;
+                if (data) {
+                    const uniques = Array.from(new Set(
+                        data
+                            .map((r: any) => (r.univers ?? '').toString().trim())
+                            .filter((u: string) => u !== '')
+                    ));
+                    // trier par label lisible
+                    uniques.sort((a: string, b: string) => {
+                        const la = universLabels[a] ?? a;
+                        const lb = universLabels[b] ?? b;
+                        return la.localeCompare(lb, 'fr');
+                    });
+                    setUniversList(uniques);
+                } else {
+                    setUniversList([]);
+                }
+            } catch (err) {
+                console.error('Erreur fetch univers:', err);
+                setUniversList([]);
+            }
+            setLoadingUniverses(false);
+        }
+        fetchUniverses();
+    }, []);
+
     useEffect(() => {
         async function fetchPages() {
             const { data, error } = await supabase.from<'pages', Page>('pages').select('*');
@@ -47,10 +144,13 @@ export default function Home() {
     const filteredPages = pages.filter(p =>
         (p.canon ?? false) === showCanon &&
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        selectedTypes.includes(p.type)
+        selectedTypes.includes(p.type) &&
+        // Si selectedUnivers non null, filtrer par p.univers === selectedUnivers
+        (selectedUnivers === null || selectedUnivers === '' || (p.univers ?? '') === selectedUnivers)
     );
 
-    if (loading) return <p>Chargement...</p>;
+    // Ne pas empêcher le rendu des boutons d'univers pendant le chargement des fiches.
+    const resultsLoading = loading;
 
     return (
         <main className="p-6 max-w-7xl mx-auto">
@@ -96,20 +196,58 @@ export default function Home() {
                 </div>
 
 
-                {/* Barre de recherche */}
-                <div className="w-full">
+                {/* Barre de recherche et boutons d'univers (dynamiques) */}
+                <div className="w-full flex flex-col sm:flex-row gap-4">
                     <input
                         type="search"
                         placeholder="🔍 Rechercher une fiche..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring focus:ring-blue-400"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring focus:ring-blue-400"
                     />
+
+                    <div className="flex flex-wrap gap-2 items-center">
+                        <button
+                            onClick={() => selectUnivers('')}
+                            className={`px-3 py-1 rounded ${selectedUnivers === '' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                        >
+                            Tous les univers
+                        </button>
+
+                        {/* afficher la liste d'univers calculée (displayUniverses) */}
+                        {displayUniverses.map((u) => (
+                            <button
+                                key={u}
+                                onClick={() => selectUnivers(u)}
+                                className={`px-3 py-1 rounded ${selectedUnivers === u ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                            >
+                                {universLabels[u] ?? u} {countsByUnivers.get(u) ? `(${countsByUnivers.get(u)})` : ''}
+                            </button>
+                        ))}
+
+                        {loadingUniverses && (
+                            <span className="text-sm text-gray-500 ml-2">Chargement univers…</span>
+                        )}
+
+                        {/* bouton réinitialiser */}
+                        {selectedUnivers !== null && (
+                            <button
+                                onClick={() => selectUnivers(null)}
+                                className="px-3 py-1 rounded bg-red-100 text-red-700"
+                            >
+                                Réinitialiser
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Résultats */}
-            {filteredPages.length === 0 ? (
+            {/* Résultats : n'afficher que si un univers a été sélectionné (ou 'Tous les univers' = '') */}
+            {selectedUnivers === null ? (
+                <p className="text-center text-gray-500">Veuillez sélectionner un univers pour afficher les fiches.</p>
+            ) : resultsLoading ? (
+                <p className="text-center text-gray-500">Chargement des fiches...</p>
+            ) : filteredPages.length === 0 ? (
                 <p className="text-center text-gray-500">Aucune fiche trouvée.</p>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
